@@ -75,16 +75,15 @@ const run = async () => {
       return {
         artist,
         name: track.name.replace(/,/g, ' '),
-        tempo: Math.round(tempo),
+        BPM: Math.round(tempo),
         key: `${key + 1}${mode === 1 ? 'B' : 'A'}`,
-        // mode,
-        energy,
-        valence,
-        id,
-        uri,
-        track_href,
+        energy: `${Math.round(energy * 100)}%`,
+        valence: `${Math.round(valence * 100)}%`,
         duration: convertMs(duration_ms),
-        time_signature
+        time_signature,
+        uri,
+        id,
+        track_href,
       }
     });
 
