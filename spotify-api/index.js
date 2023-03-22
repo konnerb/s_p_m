@@ -1,5 +1,5 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const { writeFile } = require('fs');
+const { writeFile, existsSync, mkdirSync } = require('fs');
 const { convertMs, convertToCSV } = require('../helpers');
 
 let spotifyApi = new SpotifyWebApi({
@@ -10,11 +10,11 @@ let spotifyApi = new SpotifyWebApi({
 
 spotifyApi.setAccessToken(process.env.TOKEN);
 
-module.exports.configureSpotfiyPlaylist = async (from = '', to = '', options = {}) => {
+module.exports.configureSpotfiyPlaylist = async (from, to = '', options = {}) => {
 
   if (!from) return;
 
-  const { createCSVFile = true, tempoRange = 2, keyRange = 2 } = options;
+  const { createCSVFile = true, tempoRange = 2, keyRange = 1 } = options;
 
   try {
     const playlistData = await spotifyApi.getPlaylistTracks(from)
@@ -28,8 +28,8 @@ module.exports.configureSpotfiyPlaylist = async (from = '', to = '', options = {
       const tempoA = Math.round(a.tempo);
       const tempoB = Math.round(b.tempo);
 
-      const keyRangeValid = (a.key + keyRange) >= b.key && (a.key - keyRange) <= b.key;
       const tempoRangeValid = (tempoA + tempoRange) >= tempoB && (tempoA - tempoRange) <= tempoB;
+      const keyRangeValid = (a.key + keyRange) >= b.key && (a.key - keyRange) <= b.key;
 
       if (tempoRangeValid && keyRangeValid) {
         return a.energy - b.energy;
@@ -73,6 +73,10 @@ module.exports.configureSpotfiyPlaylist = async (from = '', to = '', options = {
     });
 
     const csv = await convertToCSV(configureTrackData);
+
+    if (!existsSync('./files')) {
+      mkdirSync('./files');
+    }
     await writeFile('files/playlist_data.csv', csv, () => console.log('Playlist csv created.'));
 
   } catch (error) {
