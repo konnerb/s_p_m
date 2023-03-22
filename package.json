@@ -1,0 +1,13 @@
+{
+  "name": "spotify_playlist_organizer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "konnerb <konner.bouchard@hotmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "watch": "node index.js"
+  },
+  "dependencies": {
+    "spotify-web-api-node": "^5.0.2"
+  }
+}
