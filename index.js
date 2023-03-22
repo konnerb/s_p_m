@@ -16,8 +16,18 @@ const convertToCSV = async (arr) => {
 
   return await array.map(it => {
     return Object.values(it).toString()
-  }).join('\n')
-}
+  }).join('\n');
+};
+
+const convertMs = (ms) => {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = ((ms % 60000) / 1000).toFixed(0);
+  return (
+    seconds == 60 ?
+      (minutes + 1) + ":00" :
+      minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+  );
+};
 
 const run = async () => {
   const createCSVFile = true;
@@ -58,20 +68,22 @@ const run = async () => {
 
       const { energy, key, mode, valence, tempo, id, uri, track_href, duration_ms, time_signature } = song;
       const { track } = playlistData.body.items.find(({ track }) => track.id === id);
-      const artist = track.artists.map((artist) => artist.name).join(' ')
+
+      // should use + or / for multiple artists?
+      const artist = track.artists.map((artist) => artist.name).join(' ').replace(/,/g, ' ')
 
       return {
         artist,
         name: track.name.replace(/,/g, ' '),
-        tempo,
-        key,
-        mode,
+        tempo: Math.round(tempo),
+        key: `${key + 1}${mode === 1 ? 'B' : 'A'}`,
+        // mode,
         energy,
         valence,
         id,
         uri,
         track_href,
-        duration_ms,
+        duration: convertMs(duration_ms),
         time_signature
       }
     });
