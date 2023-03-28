@@ -19,9 +19,9 @@ module.exports.configureSpotfiyPlaylist = async (from, to = '', options = {}) =>
   try {
     const playlistData = await spotifyApi.getPlaylistTracks(from)
     const trackIds = playlistData.body.items.map(t => t.track.id);
-    const trackPlaylistFeatures = await spotifyApi.getAudioFeaturesForTracks(trackIds);
+    const playlistTrackFeatures = await spotifyApi.getAudioFeaturesForTracks(trackIds);
 
-    const sortTracks = trackPlaylistFeatures.body.audio_features.sort((a, b) => {
+    const sortTracks = playlistTrackFeatures.body.audio_features.sort((a, b) => {
 
       if (!tempoRange && !keyRange) return a.tempo - b.tempo;
 
@@ -40,11 +40,11 @@ module.exports.configureSpotfiyPlaylist = async (from, to = '', options = {}) =>
       }
     });
 
-    const sortTrackIDs = sortTracks.map(track => track.uri);
+    const playlistTrackIDs = sortTracks.map(track => track.uri);
 
     if (to) {
-      await spotifyApi.addTracksToPlaylist(to, sortTrackIDs);
-      console.log('Track Successfully updated to: ')
+      await spotifyApi.addTracksToPlaylist(to, playlistTrackIDs);
+      console.log('Tracks Successfully updated to: ')
     }
 
     if (!createCSVFile) return;
@@ -77,60 +77,10 @@ module.exports.configureSpotfiyPlaylist = async (from, to = '', options = {}) =>
     if (!existsSync('./files')) {
       mkdirSync('./files');
     }
-    await writeFile('files/playlist_data.csv', csv, () => console.log('Playlist csv created.'));
+
+    await writeFile('files/playlist_data.csv', csv, () => console.log('Playlist csv created in /files directory.'));
 
   } catch (error) {
     console.error("ERROR", error)
   }
-
-
-  // spotifyApi.getUser(user)
-  //   .then(function (data) {
-  //     console.log('Some information about this user', data.body);
-  //   }, function (err) {
-  //     console.log('Something went wrong!', err);
-  //   });
-
-  // Get tracks in a playlist
-  // spotifyApi.getPlaylistTracks(playlist)
-  //   .then(
-  //     function (data) {
-  //       console.log('The playlist contains these tracks', data.body);
-  //     },
-  //     function (err) {
-  //       console.log('Something went wrong!', err);
-  //     }
-  //   );
-
-  // Get artists related to an artist
-  // spotifyApi.getArtistRelatedArtists(callasto)
-  //   .then(function (data) {
-  //     console.log(data.body);
-  //   }, function (err) {
-  //     done(err);
-  //   });
-
-  /* Get Audio Features for a Track */
-  // spotifyApi.getAudioFeaturesForTrack(track)
-  //   .then(function (data) {
-  //     console.log(data.body);
-  //   }, function (err) {
-  //     done(err);
-  //   });
-
-  // /* Get Audio Analysis for a Track */
-  // spotifyApi.getAudioAnalysisForTrack(track)
-  //   .then(function (data) {
-  //     console.log(data.body);
-  //   }, function (err) {
-  //     done(err);
-  //   });
-
-  /* Get Audio Features for several tracks */
-  // spotifyApi.getAudioFeaturesForTracks(['4iV5W9uYEdYUVa79Axb7Rh', '3Qm86XLflmIXVm1wcwkgDK'])
-  // .then(function(data) {
-  //   console.log(data.body);
-  // }, function(err) {
-  //   done(err);
-  // });
 }
