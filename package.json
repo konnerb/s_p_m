@@ -8,6 +8,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "request": "^2.88.2",
     "spotify-web-api-node": "^5.0.2"
   }
 }
