@@ -8,18 +8,19 @@ let spotifyApi = new SpotifyWebApi({
   redirectUri: process.env.REDIRECT_URI
 });
 
-spotifyApi.setAccessToken(process.env.TOKEN);
 
-module.exports.configureSpotfiyPlaylist = async (from, to = '', options = {}) => {
+module.exports.configureSpotfiyPlaylist = async (token, fromPlaylist, toPlaylist = '', options = {}) => {
 
-  if (!from) return;
+  if (!token || !fromPlaylist) return;
 
-  const { createCSVFile = true, tempoRange = 2, keyRange = 1 } = options;
+  spotifyApi.setAccessToken(token);
+
+  const { createCSVFile = true, tempoRange = 2, keyRange = 1, csvName = '' } = options;
 
   try {
-    const playlistData = await spotifyApi.getPlaylistTracks(from)
-    const trackIds = playlistData.body.items.map(t => t.track.id);
-    const playlistTrackFeatures = await spotifyApi.getAudioFeaturesForTracks(trackIds);
+    const playlistTracks = await spotifyApi.getPlaylistTracks(fromPlaylist, { fields: 'items' });
+    const playlistTrackIds = playlistTracks.body.items.map(t => t.track.id);
+    const playlistTrackFeatures = await spotifyApi.getAudioFeaturesForTracks(playlistTrackIds);
 
     const sortTracks = playlistTrackFeatures.body.audio_features.sort((a, b) => {
 
@@ -40,35 +41,36 @@ module.exports.configureSpotfiyPlaylist = async (from, to = '', options = {}) =>
       }
     });
 
-    const playlistTrackIDs = sortTracks.map(track => track.uri);
+    const playlistTrackURIs = sortTracks.map(track => track.uri);
 
-    if (to) {
-      await spotifyApi.addTracksToPlaylist(to, playlistTrackIDs);
+    if (toPlaylist) {
+      await spotifyApi.addTracksToPlaylist(toPlaylist, playlistTrackURIs);
       console.log('Tracks Successfully updated to: ')
     }
 
     if (!createCSVFile) return;
 
-    const configureTrackData = sortTracks.map(song => {
+    const configureTrackData = sortTracks.map((song, index) => {
 
-      const { energy, key, mode, valence, tempo, id, uri, track_href, duration_ms, time_signature } = song;
-      const { track } = playlistData.body.items.find(({ track }) => track.id === id);
+      const { energy, key, mode, valence, tempo, id, uri, duration_ms, time_signature } = song;
+      const { track } = playlistTracks.body.items.find(({ track }) => track.id === id);
 
-      // should use + or / for multiple artists?
-      const artist = track.artists.map((artist) => artist.name).join(' ').replace(/,/g, ' ')
+      const artists = track.artists.map((artist) => artist.name);
+      const formattedArtists = artists.length > 1 ? artists.join(',').replace(/,/g, ' / ') : artists.join(' ');
 
       return {
-        artist,
-        name: track.name.replace(/,/g, ' '),
+        Order: index + 1,
+        Artist: formattedArtists,
+        Name: track.name.replace(/,/g, ' '),
         BPM: Math.round(tempo),
-        key: `${key + 1}${mode === 1 ? 'B' : 'A'}`,
-        energy: `${Math.round(energy * 100)}%`,
-        valence: `${Math.round(valence * 100)}%`,
-        duration: convertMs(duration_ms),
-        time_signature,
+        Key: `${key + 1}${mode === 1 ? 'B' : 'A'}`,
+        Energy: `${Math.round(energy * 100)}%`,
+        Valence: `${Math.round(valence * 100)}%`,
+        Duration: convertMs(duration_ms),
+        Time_Signature: time_signature,
         uri,
         id,
-        track_href
+        Artwork: track.album?.images[0]?.url || 'no artwork available :('
       }
     });
 
@@ -78,9 +80,27 @@ module.exports.configureSpotfiyPlaylist = async (from, to = '', options = {}) =>
       mkdirSync('./files');
     }
 
-    await writeFile('files/playlist_data.csv', csv, () => console.log('Playlist csv created in /files directory.'));
+    const playlistName = csvName
+      ? null
+      : toPlaylist
+        ? await spotifyApi.getPlaylist(toPlaylist, { fields: 'name' })
+        : await spotifyApi.getPlaylist(fromPlaylist, { fields: 'name' });
+
+    let csvFileName = csvName ? csvName : playlistName ? playlistName.body.name : 'playlist';
+
+    if (existsSync(`files/${csvFileName}.csv`)) {
+      let timestamp = Date.now().toString();
+      timestamp = timestamp.substring(timestamp.length - 4)
+
+      csvFileName = `${csvFileName}_${timestamp}`;
+    }
+
+    await writeFile(`files/${csvFileName}.csv`, csv, () => console.log(`Your playlist csv "${csvFileName}" was created in /files directory.`));
+
+    return;
 
   } catch (error) {
     console.error("ERROR", error)
   }
+  return;
 }
