@@ -1,5 +1,6 @@
 const SpotifyWebApi = require('spotify-web-api-node');
 const { writeFile, existsSync, mkdirSync } = require('fs');
+
 const { convertMs, convertToCSV, isAlphaNumeral } = require('../helpers');
 
 let spotifyApi = new SpotifyWebApi({
@@ -56,7 +57,7 @@ module.exports.configureSpotfiyPlaylist = async (token, fromPlaylist, toPlaylist
 
     if (toPlaylist) {
       await spotifyApi.addTracksToPlaylist(toPlaylist, playlistTrackURIs);
-      console.log('Tracks Successfully updated to: ')
+      console.log('Tracks Successfully updated');
     }
 
     if (!createCSVFile && !createJSONFile) return;
@@ -85,7 +86,7 @@ module.exports.configureSpotfiyPlaylist = async (token, fromPlaylist, toPlaylist
         Time_Signature: time_signature,
         id,
         uri,
-        Artwork: track.album?.images[0]?.url || 'no artwork available :('
+        Artwork: track.album?.images[0]?.url || 'artwork n/a :('
       }
     });
 
@@ -130,7 +131,7 @@ module.exports.configureSpotfiyPlaylist = async (token, fromPlaylist, toPlaylist
     return;
 
   } catch (error) {
-    console.error('Error in Spotfiy API: ', error);
+    console.error('Error in spotfiy-api: ', error);
     throw error
   }
 }
