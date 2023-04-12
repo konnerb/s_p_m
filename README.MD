@@ -5,4 +5,4 @@ A dynamic tool utilizing [node js](https://nodejs.org/en/about) for mixing Spoti
 
 - [Spotify For Developers](https://developer.spotify.com/)
 
-- [camelot wheel visualization](https://mixedinkey.com/camelot-wheel/)
+- [Camelot Wheel Visualization](https://mixedinkey.com/camelot-wheel/)
