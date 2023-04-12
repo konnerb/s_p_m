@@ -10,7 +10,7 @@
 build
 
 # misc
-/files
+/playlist_data
 .localized
 .DS_Store
 .env
